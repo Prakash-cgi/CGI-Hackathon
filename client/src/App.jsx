@@ -151,35 +151,6 @@ var user = {
         </p>
       </div>
 
-      {/* Public URL Access */}
-      <div className="card">
-        <h2>🌐 Public Access</h2>
-        <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: '#f0f8ff', borderRadius: '8px', border: '1px solid #667eea'}}>
-          <span style={{color: '#667eea', fontWeight: '600'}}>✅ Application is publicly accessible</span>
-          <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-            <span style={{fontSize: '0.9rem', color: '#666'}}>Public URL:</span>
-            <a 
-              href="https://warm-parts-melt.loca.lt" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{
-                color: '#667eea', 
-                fontWeight: '600', 
-                textDecoration: 'none',
-                padding: '4px 8px',
-                background: 'rgba(102, 126, 234, 0.1)',
-                borderRadius: '4px',
-                fontSize: '0.9rem'
-              }}
-            >
-              https://warm-parts-melt.loca.lt
-            </a>
-          </div>
-        </div>
-        <p style={{fontSize: '0.9rem', color: '#666', marginTop: '8px'}}>
-          🎯 Perfect for hackathon demonstrations and sharing with judges!
-        </p>
-      </div>
 
       <div className="card">
         <h2>📝 Input Your Code</h2>
