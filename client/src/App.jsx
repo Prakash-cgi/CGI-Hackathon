@@ -55,34 +55,14 @@ var user = {
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [dragActive, setDragActive] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [apiKeySet, setApiKeySet] = useState(false);
-
-  // Check for existing API key on component mount
-  useEffect(() => {
-    const existingApiKey = localStorage.getItem('gemini_api_key');
-    if (existingApiKey) {
-      setApiKeySet(true);
-    }
-  }, []);
+  // Use a default API key for demo purposes
+  const defaultApiKey = 'demo-key-for-hackathon';
 
   const handleFileUpload = (file) => {
     setSelectedFile(file);
     setCode(''); // Clear code input when file is selected
   };
 
-  const handleSetApiKey = () => {
-    if (apiKey.trim()) {
-      setApiKeySet(true);
-      localStorage.setItem('gemini_api_key', apiKey);
-    }
-  };
-
-  const handleClearApiKey = () => {
-    setApiKey('');
-    setApiKeySet(false);
-    localStorage.removeItem('gemini_api_key');
-  };
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -116,10 +96,7 @@ var user = {
       return;
     }
 
-    if (!apiKeySet && !localStorage.getItem('gemini_api_key')) {
-      setError('Please set your Gemini API key first');
-      return;
-    }
+    // Using default API key for demo purposes
 
     setIsAnalyzing(true);
     setError(null);
@@ -135,8 +112,7 @@ var user = {
       }
       
       // Add API key to the request
-      const currentApiKey = apiKeySet ? apiKey : localStorage.getItem('gemini_api_key');
-      formData.append('apiKey', currentApiKey);
+      formData.append('apiKey', defaultApiKey);
 
       let response;
       if (analysisType) {
@@ -175,44 +151,34 @@ var user = {
         </p>
       </div>
 
-      {/* API Key Configuration */}
+      {/* Public URL Access */}
       <div className="card">
-        <h2>🔑 API Configuration</h2>
-        {!apiKeySet && !localStorage.getItem('gemini_api_key') ? (
-          <div className="form-group">
-            <label>Google Gemini API Key</label>
-            <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your Gemini API key..."
-                style={{flex: 1}}
-              />
-              <button 
-                className="btn" 
-                onClick={handleSetApiKey}
-                disabled={!apiKey.trim()}
-              >
-                Set API Key
-              </button>
-            </div>
-            <p style={{fontSize: '0.9rem', color: '#666', marginTop: '8px'}}>
-              Get your free API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{color: '#667eea'}}>Google AI Studio</a>
-            </p>
-          </div>
-        ) : (
-          <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: '#f0f8ff', borderRadius: '8px', border: '1px solid #667eea'}}>
-            <span style={{color: '#667eea', fontWeight: '600'}}>✅ API Key Configured</span>
-            <button 
-              className="btn btn-secondary" 
-              onClick={handleClearApiKey}
-              style={{padding: '6px 12px', fontSize: '14px'}}
+        <h2>🌐 Public Access</h2>
+        <div style={{display: 'flex', alignItems: 'center', gap: '15px', padding: '15px', background: '#f0f8ff', borderRadius: '8px', border: '1px solid #667eea'}}>
+          <span style={{color: '#667eea', fontWeight: '600'}}>✅ Application is publicly accessible</span>
+          <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+            <span style={{fontSize: '0.9rem', color: '#666'}}>Public URL:</span>
+            <a 
+              href="https://warm-parts-melt.loca.lt" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{
+                color: '#667eea', 
+                fontWeight: '600', 
+                textDecoration: 'none',
+                padding: '4px 8px',
+                background: 'rgba(102, 126, 234, 0.1)',
+                borderRadius: '4px',
+                fontSize: '0.9rem'
+              }}
             >
-              Change API Key
-            </button>
+              https://warm-parts-melt.loca.lt
+            </a>
           </div>
-        )}
+        </div>
+        <p style={{fontSize: '0.9rem', color: '#666', marginTop: '8px'}}>
+          🎯 Perfect for hackathon demonstrations and sharing with judges!
+        </p>
       </div>
 
       <div className="card">
