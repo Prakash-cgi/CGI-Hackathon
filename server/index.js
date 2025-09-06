@@ -134,7 +134,7 @@ const getMockResponse = (analysisType) => {
     modernization: `## Code Modernization Analysis
 
 ### Issues Found:
-- **Outdated Syntax**: Using \`var\` instead of \`const\`/`let`
+- **Outdated Syntax**: Using \`var\` instead of \`const\`/\`let\`
 - **Legacy Patterns**: Callback-style functions instead of async/await
 - **Old Object Creation**: Using function constructors instead of modern syntax
 
@@ -538,8 +538,9 @@ const analysisPrompts = {
 
 // Routes
 app.post('/api/analyze', upload.single('file'), async (req, res) => {
+  const { code, analysisType, apiKey } = req.body;
+  
   try {
-    const { code, analysisType, apiKey } = req.body;
     let codeContent = code;
 
     // Check if API key is provided
