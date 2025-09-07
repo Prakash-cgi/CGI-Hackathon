@@ -27,10 +27,39 @@ const upload = multer({ storage });
 // Initialize Gemini AI (will be set per request)
 let genAI;
 
+// Function to detect if input code is already modern
+const detectModernCode = (code) => {
+  if (!code) return false;
+  
+  const modernIndicators = [
+    'const ', 'let ', '=>', 'async ', 'await ', 'import ', 'export ',
+    'class ', 'extends ', 'constructor', 'get ', 'set ',
+    'Promise', 'fetch', 'async/await', 'template literals',
+    'destructuring', 'spread operator', 'arrow functions'
+  ];
+  
+  const legacyIndicators = [
+    'var ', 'function(', 'callback', 'jQuery', '$(',
+    'document.getElementById', 'innerHTML', 'eval(',
+    'with(', 'arguments.callee'
+  ];
+  
+  const modernCount = modernIndicators.filter(indicator => 
+    code.includes(indicator)
+  ).length;
+  
+  const legacyCount = legacyIndicators.filter(indicator => 
+    code.includes(indicator)
+  ).length;
+  
+  return modernCount > legacyCount && modernCount >= 3;
+};
+
 // Enhanced function to calculate detailed improvement metrics
-const calculateDetailedMetrics = (analysisType, response) => {
+const calculateDetailedMetrics = (analysisType, response, inputCode = '') => {
   const responseLower = response.toLowerCase();
-  let baseScore = 50; // Base score
+  const isModernInput = detectModernCode(inputCode);
+  let baseScore = isModernInput ? 75 : 50; // Higher base score for modern input
   
   // Analysis-specific keyword sets
   const analysisKeywords = {
@@ -83,9 +112,16 @@ const calculateDetailedMetrics = (analysisType, response) => {
     responseLower.includes(keyword)
   ).length;
   
-  // Calculate base score
-  baseScore -= negativeCount * 10; // Each negative indicator reduces score more
-  baseScore += positiveCount * 8; // Each positive indicator increases score
+  // Calculate base score with different penalties for modern vs legacy code
+  if (isModernInput) {
+    // For modern code, be more lenient with negative indicators
+    baseScore -= negativeCount * 5; // Reduced penalty for modern code
+    baseScore += positiveCount * 10; // Higher reward for positive indicators
+  } else {
+    // For legacy code, use original scoring
+    baseScore -= negativeCount * 10;
+    baseScore += positiveCount * 8;
+  }
   
   // Additional scoring factors
   const hasCodeExamples = responseLower.includes('example') || responseLower.includes('```');
@@ -123,15 +159,29 @@ const calculateDetailedMetrics = (analysisType, response) => {
 };
 
 // Legacy function for backward compatibility
-const calculateImprovementScore = (analysisType, response) => {
-  const metrics = calculateDetailedMetrics(analysisType, response);
+const calculateImprovementScore = (analysisType, response, inputCode = '') => {
+  const metrics = calculateDetailedMetrics(analysisType, response, inputCode);
   return metrics.overallScore;
 };
 
 // Mock responses for when API quota is exceeded
-const getMockResponse = (analysisType) => {
+const getMockResponse = (analysisType, inputCode = '') => {
+  const isModernInput = detectModernCode(inputCode);
   const mockResponses = {
-    modernization: `## Code Modernization Analysis
+    modernization: isModernInput ? `## Code Modernization Analysis
+
+### Code Quality Assessment:
+✅ **Excellent Modern Practices**: Your code demonstrates modern JavaScript patterns
+✅ **ES6+ Features**: Proper use of const/let, arrow functions, and modern syntax
+✅ **Async/Await**: Modern asynchronous programming patterns implemented
+✅ **Clean Structure**: Well-organized and readable code
+
+### Minor Enhancement Opportunities:
+1. **Consider TypeScript**: For even better type safety and developer experience
+2. **Add JSDoc Comments**: For better code documentation
+3. **Error Handling**: Ensure comprehensive error handling throughout
+
+### Modernization Score: 85% - Already well-modernized code!` : `## Code Modernization Analysis
 
 ### Issues Found:
 - **Outdated Syntax**: Using \`var\` instead of \`const\`/\`let\`
@@ -574,7 +624,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
     const analysisResult = response.text();
     
     // Calculate detailed metrics
-    const metrics = calculateDetailedMetrics(analysisType, analysisResult);
+    const metrics = calculateDetailedMetrics(analysisType, analysisResult, codeContent);
 
     res.json({
       success: true,
@@ -591,8 +641,8 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
     // Check if it's a quota exceeded error
     if (error.message.includes('429') || error.message.includes('quota')) {
       console.log(`Using mock response for ${analysisType} due to API quota exceeded`);
-      const mockResult = getMockResponse(analysisType);
-      const mockMetrics = calculateDetailedMetrics(analysisType, mockResult);
+      const mockResult = getMockResponse(analysisType, codeContent);
+      const mockMetrics = calculateDetailedMetrics(analysisType, mockResult, codeContent);
       
       res.json({
         success: true,
@@ -644,7 +694,7 @@ app.post('/api/analyze-all', upload.single('file'), async (req, res) => {
         const result = await model.generateContent(fullPrompt);
         const response = await result.response;
         const analysisResult = response.text();
-        const metrics = calculateDetailedMetrics(type, analysisResult);
+        const metrics = calculateDetailedMetrics(type, analysisResult, codeContent);
         return { type, result: analysisResult, score: metrics.overallScore, metrics };
       } catch (error) {
         console.error(`Error in ${type} analysis:`, error);
@@ -652,8 +702,8 @@ app.post('/api/analyze-all', upload.single('file'), async (req, res) => {
         // Check if it's a quota exceeded error
         if (error.message.includes('429') || error.message.includes('quota')) {
           console.log(`Using mock response for ${type} due to API quota exceeded`);
-          const mockResult = getMockResponse(type);
-          const mockMetrics = calculateDetailedMetrics(type, mockResult);
+          const mockResult = getMockResponse(type, codeContent);
+          const mockMetrics = calculateDetailedMetrics(type, mockResult, codeContent);
           return { 
             type, 
             result: mockResult, 
