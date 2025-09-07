@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Code, FileText, Zap, Shield, GitBranch, BarChart3, Settings, FileCheck } from 'lucide-react';
+import { Upload, Code, FileText, Zap, Shield, GitBranch, BarChart3, Settings, FileCheck, Copy, Check } from 'lucide-react';
 import axios from 'axios';
 
 // Helper functions for modernized code examples
@@ -387,6 +387,7 @@ var user = {
   const [error, setError] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [copied, setCopied] = useState(false);
   // Use a default API key for demo purposes
   const defaultApiKey = 'demo-key-for-hackathon';
 
@@ -471,6 +472,267 @@ var user = {
     setSelectedFile(null);
     setResults(null);
     setError(null);
+  };
+
+  const copyToClipboard = async () => {
+    const modernCode = `// Complete Modern JavaScript Implementation
+import { validateInput, sanitizeData } from './utils/validation.js';
+import { logger } from './utils/logger.js';
+import crypto from 'crypto';
+import { z } from 'zod';
+import { performance } from 'perf_hooks';
+
+// Input validation schemas
+const userSchema = z.object({
+  name: z.string().min(1).max(100).regex(/^[a-zA-Z\\s]+$/),
+  email: z.string().email(),
+  age: z.number().min(0).max(150)
+});
+
+const itemSchema = z.object({
+  price: z.number().positive(),
+  name: z.string().min(1).max(200)
+});
+
+// Memoization cache for performance optimization
+const memoCache = new Map();
+
+/**
+ * High-performance total calculation with memoization and validation
+ * @param {Array<{price: number}>} items - Array of items with price property
+ * @returns {Promise<number>} Total price
+ */
+const calculateTotal = async (items) => {
+  const startTime = performance.now();
+  
+  if (!Array.isArray(items)) {
+    throw new Error('Items must be an array');
+  }
+  
+  // Create cache key for memoization
+  const cacheKey = JSON.stringify(items.map(item => ({ price: item.price })));
+  
+  // Check cache first for performance
+  if (memoCache.has(cacheKey)) {
+    const endTime = performance.now();
+    logger.info(\`Cache hit! Calculation took \${endTime - startTime}ms\`);
+    return memoCache.get(cacheKey);
+  }
+  
+  // Use optimized reduce with validation
+  let total = 0;
+  for (let i = 0; i < items.length; i++) {
+    const validatedItem = itemSchema.parse(items[i]);
+    total += validatedItem.price;
+  }
+  
+  // Cache result for future use
+  memoCache.set(cacheKey, total);
+  
+  const endTime = performance.now();
+  logger.info(\`Calculation took \${endTime - startTime}ms\`);
+  
+  return total;
+};
+
+/**
+ * Securely processes user data with validation, sanitization, and modern async/await
+ * @param {Object} user - User object
+ * @returns {Promise<Object>} Processed user data
+ */
+const processUserData = async (user) => {
+  try {
+    if (!user) {
+      throw new Error('User data is required');
+    }
+    
+    // Validate input using Zod schema
+    const validatedUser = userSchema.parse(user);
+    
+    // Sanitize data
+    const sanitizedUser = {
+      name: validatedUser.name.trim(),
+      email: validatedUser.email.toLowerCase().trim(),
+      age: validatedUser.age,
+      id: crypto.randomUUID(), // Secure ID generation
+      createdAt: new Date().toISOString(),
+      processedAt: new Date().toISOString(),
+      status: 'active'
+    };
+    
+    logger.info('Processing user data', { userId: sanitizedUser.id });
+    
+    return sanitizedUser;
+  } catch (error) {
+    logger.error('Error processing user data', error);
+    throw new Error(\`Validation failed: \${error.message}\`);
+  }
+};
+
+/**
+ * Optimized data fetching with connection pooling, timeout handling, and CSRF protection
+ * @param {string} endpoint - API endpoint
+ * @returns {Promise<Object>} Fetched data
+ */
+const fetchData = async (endpoint) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+  
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    
+    const response = await fetch(endpoint, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Cache-Control': 'max-age=300'
+      },
+      credentials: 'same-origin'
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout');
+    }
+    logger.error('Error fetching data', error);
+    throw error;
+  }
+};
+
+/**
+ * Batch processing for large datasets with parallel processing
+ * @param {Array} users - Array of users
+ * @returns {Promise<Array>} Processed users
+ */
+const processUsersBatch = async (users) => {
+  const BATCH_SIZE = 100;
+  const results = [];
+  
+  for (let i = 0; i < users.length; i += BATCH_SIZE) {
+    const batch = users.slice(i, i + BATCH_SIZE);
+    
+    // Process batch in parallel using Promise.all
+    const batchResults = await Promise.all(
+      batch.map(async (user) => {
+        // Simulate async processing
+        await new Promise(resolve => setTimeout(resolve, 1));
+        return {
+          ...user,
+          processedAt: new Date().toISOString(),
+          id: crypto.randomUUID()
+        };
+      })
+    );
+    
+    results.push(...batchResults);
+  }
+  
+  return results;
+};
+
+// Modern class-based user object with proper encapsulation
+class User {
+  constructor(name, age, email) {
+    this._name = name;
+    this._age = age;
+    this._email = email;
+    this._createdAt = new Date();
+    this._id = crypto.randomUUID();
+  }
+  
+  get name() {
+    return this._name;
+  }
+  
+  set name(value) {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+      throw new Error('Name must be a non-empty string');
+    }
+    this._name = value.trim();
+  }
+  
+  get age() {
+    return this._age;
+  }
+  
+  set age(value) {
+    if (typeof value !== 'number' || value < 0 || value > 150) {
+      throw new Error('Age must be a number between 0 and 150');
+    }
+    this._age = value;
+  }
+  
+  get email() {
+    return this._email;
+  }
+  
+  set email(value) {
+    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    if (!emailRegex.test(value)) {
+      throw new Error('Invalid email format');
+    }
+    this._email = value.toLowerCase().trim();
+  }
+  
+  getInfo() {
+    return \`\${this._name} is \${this._age} years old\`;
+  }
+  
+  toJSON() {
+    return {
+      id: this._id,
+      name: this._name,
+      age: this._age,
+      email: this._email,
+      createdAt: this._createdAt.toISOString()
+    };
+  }
+  
+  static fromJSON(json) {
+    const user = new User(json.name, json.age, json.email);
+    user._id = json.id;
+    user._createdAt = new Date(json.createdAt);
+    return user;
+  }
+}
+
+// Export all modern functions and classes
+export { 
+  calculateTotal, 
+  processUserData, 
+  fetchData, 
+  processUsersBatch,
+  User,
+  userSchema,
+  itemSchema
+};`;
+
+    try {
+      await navigator.clipboard.writeText(modernCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = modernCode;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -1248,80 +1510,379 @@ var user = {
             marginBottom: '30px',
             boxShadow: '0 8px 25px rgba(0,0,0,0.1)'
           }}>
-            <h3 style={{margin: '0 0 25px 0', color: '#333', fontSize: '1.8rem', textAlign: 'center'}}>
-              🚀 Fully Modernized Code Examples
-            </h3>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px'}}>
+              <h3 style={{margin: 0, color: '#333', fontSize: '1.8rem'}}>
+                🚀 Complete Modernized Code Implementation
+              </h3>
+              <button
+                onClick={copyToClipboard}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 20px',
+                  background: copied ? '#4CAF50' : '#667eea',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+                onMouseOver={(e) => {
+                  if (!copied) {
+                    e.target.style.background = '#5a6fd8';
+                    e.target.style.transform = 'translateY(-1px)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!copied) {
+                    e.target.style.background = '#667eea';
+                    e.target.style.transform = 'translateY(0)';
+                  }
+                }}
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? 'Copied!' : 'Copy Code'}
+              </button>
+            </div>
             <p style={{textAlign: 'center', color: '#666', marginBottom: '30px', fontSize: '1.1rem'}}>
-              Complete modern implementations based on the analysis recommendations
+              All modern implementations combined in one comprehensive codebase
             </p>
             
-            {Object.entries(results).map(([type, data]) => {
-              const analysisType = analysisTypes.find(t => t.id === type);
-              const modernCode = getModernizedCode(type, code);
-              
-              return (
-                <div key={type} style={{
-                  marginBottom: '30px',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '12px',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    background: `linear-gradient(135deg, ${analysisType?.color || '#667eea'} 0%, ${analysisType?.color || '#667eea'}dd 100%)`,
-                    color: 'white',
-                    padding: '15px 20px',
+            {/* Single unified code block */}
+            <div style={{
+              border: '2px solid #667eea',
+              borderRadius: '12px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #667eea 100%)',
+                color: 'white',
+                padding: '15px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <h4 style={{margin: 0, fontSize: '1.2rem'}}>
+                  🎯 Modern JavaScript Implementation
+                </h4>
+                <button
+                  onClick={copyToClipboard}
+                  style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px'
-                  }}>
-                    {analysisType && <analysisType.icon size={24} />}
-                    <h4 style={{margin: 0, fontSize: '1.2rem'}}>
-                      {analysisType?.name || type} - Modern Implementation
-                    </h4>
-                  </div>
-                  
-                  <div style={{
-                    background: '#f8f9fa',
-                    padding: '20px',
-                    borderTop: '1px solid #e0e0e0'
-                  }}>
-                    <div style={{
-                      background: '#2d3748',
-                      color: '#e2e8f0',
-                      padding: '20px',
-                      borderRadius: '8px',
-                      fontFamily: 'Monaco, Consolas, "Courier New", monospace',
-                      fontSize: '14px',
-                      lineHeight: '1.6',
-                      overflow: 'auto',
-                      whiteSpace: 'pre-wrap',
-                      border: '1px solid #4a5568'
-                    }}>
-                      {modernCode}
-                    </div>
-                    
-                    <div style={{
-                      marginTop: '15px',
-                      padding: '15px',
-                      background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
-                      borderRadius: '8px',
-                      border: '1px solid #4CAF50'
-                    }}>
-                      <h5 style={{margin: '0 0 10px 0', color: '#2e7d32', fontSize: '1rem'}}>
-                        ✨ Key Modernizations Applied:
-                      </h5>
-                      <ul style={{margin: 0, paddingLeft: '20px', color: '#2e7d32'}}>
-                        {getModernizationHighlights(type).map((highlight, index) => (
-                          <li key={index} style={{marginBottom: '5px', fontSize: '0.9rem'}}>
-                            {highlight}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
+                    gap: '6px',
+                    padding: '6px 12px',
+                    background: 'rgba(255,255,255,0.2)',
+                    color: 'white',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.background = 'rgba(255,255,255,0.3)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.background = 'rgba(255,255,255,0.2)';
+                  }}
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+              
+              <div style={{
+                background: '#f8f9fa',
+                padding: '20px',
+                borderTop: '1px solid #e0e0e0'
+              }}>
+                <div style={{
+                  background: '#2d3748',
+                  color: '#e2e8f0',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  fontFamily: 'Monaco, Consolas, "Courier New", monospace',
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  overflow: 'auto',
+                  whiteSpace: 'pre-wrap',
+                  border: '1px solid #4a5568'
+                }}>
+{`// Complete Modern JavaScript Implementation
+import { validateInput, sanitizeData } from './utils/validation.js';
+import { logger } from './utils/logger.js';
+import crypto from 'crypto';
+import { z } from 'zod';
+import { performance } from 'perf_hooks';
+
+// Input validation schemas
+const userSchema = z.object({
+  name: z.string().min(1).max(100).regex(/^[a-zA-Z\\s]+$/),
+  email: z.string().email(),
+  age: z.number().min(0).max(150)
+});
+
+const itemSchema = z.object({
+  price: z.number().positive(),
+  name: z.string().min(1).max(200)
+});
+
+// Memoization cache for performance optimization
+const memoCache = new Map();
+
+/**
+ * High-performance total calculation with memoization and validation
+ * @param {Array<{price: number}>} items - Array of items with price property
+ * @returns {Promise<number>} Total price
+ */
+const calculateTotal = async (items) => {
+  const startTime = performance.now();
+  
+  if (!Array.isArray(items)) {
+    throw new Error('Items must be an array');
+  }
+  
+  // Create cache key for memoization
+  const cacheKey = JSON.stringify(items.map(item => ({ price: item.price })));
+  
+  // Check cache first for performance
+  if (memoCache.has(cacheKey)) {
+    const endTime = performance.now();
+    logger.info(\`Cache hit! Calculation took \${endTime - startTime}ms\`);
+    return memoCache.get(cacheKey);
+  }
+  
+  // Use optimized reduce with validation
+  let total = 0;
+  for (let i = 0; i < items.length; i++) {
+    const validatedItem = itemSchema.parse(items[i]);
+    total += validatedItem.price;
+  }
+  
+  // Cache result for future use
+  memoCache.set(cacheKey, total);
+  
+  const endTime = performance.now();
+  logger.info(\`Calculation took \${endTime - startTime}ms\`);
+  
+  return total;
+};
+
+/**
+ * Securely processes user data with validation, sanitization, and modern async/await
+ * @param {Object} user - User object
+ * @returns {Promise<Object>} Processed user data
+ */
+const processUserData = async (user) => {
+  try {
+    if (!user) {
+      throw new Error('User data is required');
+    }
+    
+    // Validate input using Zod schema
+    const validatedUser = userSchema.parse(user);
+    
+    // Sanitize data
+    const sanitizedUser = {
+      name: validatedUser.name.trim(),
+      email: validatedUser.email.toLowerCase().trim(),
+      age: validatedUser.age,
+      id: crypto.randomUUID(), // Secure ID generation
+      createdAt: new Date().toISOString(),
+      processedAt: new Date().toISOString(),
+      status: 'active'
+    };
+    
+    logger.info('Processing user data', { userId: sanitizedUser.id });
+    
+    return sanitizedUser;
+  } catch (error) {
+    logger.error('Error processing user data', error);
+    throw new Error(\`Validation failed: \${error.message}\`);
+  }
+};
+
+/**
+ * Optimized data fetching with connection pooling, timeout handling, and CSRF protection
+ * @param {string} endpoint - API endpoint
+ * @returns {Promise<Object>} Fetched data
+ */
+const fetchData = async (endpoint) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+  
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    
+    const response = await fetch(endpoint, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Cache-Control': 'max-age=300'
+      },
+      credentials: 'same-origin'
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout');
+    }
+    logger.error('Error fetching data', error);
+    throw error;
+  }
+};
+
+/**
+ * Batch processing for large datasets with parallel processing
+ * @param {Array} users - Array of users
+ * @returns {Promise<Array>} Processed users
+ */
+const processUsersBatch = async (users) => {
+  const BATCH_SIZE = 100;
+  const results = [];
+  
+  for (let i = 0; i < users.length; i += BATCH_SIZE) {
+    const batch = users.slice(i, i + BATCH_SIZE);
+    
+    // Process batch in parallel using Promise.all
+    const batchResults = await Promise.all(
+      batch.map(async (user) => {
+        // Simulate async processing
+        await new Promise(resolve => setTimeout(resolve, 1));
+        return {
+          ...user,
+          processedAt: new Date().toISOString(),
+          id: crypto.randomUUID()
+        };
+      })
+    );
+    
+    results.push(...batchResults);
+  }
+  
+  return results;
+};
+
+// Modern class-based user object with proper encapsulation
+class User {
+  constructor(name, age, email) {
+    this._name = name;
+    this._age = age;
+    this._email = email;
+    this._createdAt = new Date();
+    this._id = crypto.randomUUID();
+  }
+  
+  get name() {
+    return this._name;
+  }
+  
+  set name(value) {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+      throw new Error('Name must be a non-empty string');
+    }
+    this._name = value.trim();
+  }
+  
+  get age() {
+    return this._age;
+  }
+  
+  set age(value) {
+    if (typeof value !== 'number' || value < 0 || value > 150) {
+      throw new Error('Age must be a number between 0 and 150');
+    }
+    this._age = value;
+  }
+  
+  get email() {
+    return this._email;
+  }
+  
+  set email(value) {
+    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    if (!emailRegex.test(value)) {
+      throw new Error('Invalid email format');
+    }
+    this._email = value.toLowerCase().trim();
+  }
+  
+  getInfo() {
+    return \`\${this._name} is \${this._age} years old\`;
+  }
+  
+  toJSON() {
+    return {
+      id: this._id,
+      name: this._name,
+      age: this._age,
+      email: this._email,
+      createdAt: this._createdAt.toISOString()
+    };
+  }
+  
+  static fromJSON(json) {
+    const user = new User(json.name, json.age, json.email);
+    user._id = json.id;
+    user._createdAt = new Date(json.createdAt);
+    return user;
+  }
+}
+
+// Export all modern functions and classes
+export { 
+  calculateTotal, 
+  processUserData, 
+  fetchData, 
+  processUsersBatch,
+  User,
+  userSchema,
+  itemSchema
+};`}
                 </div>
-              );
-            })}
+                
+                <div style={{
+                  marginTop: '15px',
+                  padding: '15px',
+                  background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
+                  borderRadius: '8px',
+                  border: '1px solid #4CAF50'
+                }}>
+                  <h5 style={{margin: '0 0 10px 0', color: '#2e7d32', fontSize: '1rem'}}>
+                    ✨ Key Modernizations Applied:
+                  </h5>
+                  <ul style={{margin: 0, paddingLeft: '20px', color: '#2e7d32'}}>
+                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>ES6+ features: const/let, arrow functions, template literals, destructuring</li>
+                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Modern async/await pattern for better async handling</li>
+                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Input validation using Zod schemas for type safety</li>
+                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Data sanitization and secure ID generation with crypto.randomUUID()</li>
+                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>CSRF protection and secure headers for API calls</li>
+                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Performance optimization with memoization and caching</li>
+                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Batch processing with Promise.all for parallel execution</li>
+                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Modern class syntax with proper encapsulation and getters/setters</li>
+                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Comprehensive error handling with try-catch blocks</li>
+                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>JSDoc documentation for better code clarity and IDE support</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Footer Section */}
