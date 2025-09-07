@@ -1331,7 +1331,7 @@ export {
           }}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px'}}>
               <h3 style={{margin: 0, color: '#333', fontSize: '1.8rem'}}>
-                🚀 Complete Modernized Code Implementation
+                🚀 Modernized code
               </h3>
               <button
                 onClick={copyToClipboard}
