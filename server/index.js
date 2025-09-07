@@ -712,6 +712,6 @@ app.get('/api/analysis-types', (req, res) => {
   res.json(types);
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });

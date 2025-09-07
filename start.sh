@@ -14,8 +14,8 @@ fi
 
 # Start the application
 echo "🌐 Starting servers..."
-echo "   Frontend: http://localhost:3000"
-echo "   Backend:  http://localhost:5001"
+echo "   Frontend: http://34.135.103.183:3000"
+echo "   Backend:  http://34.135.103.183:5001"
 echo ""
 echo "✨ Sample code is pre-loaded - try 'Analyze All' to see the magic!"
 echo ""

@@ -58,7 +58,7 @@ An AI-powered web application that analyzes your code and provides comprehensive
    This will start both the backend server (port 5001) and frontend (port 3000).
 
 5. **Open your browser**
-   Navigate to `http://localhost:3000`
+   Navigate to `http://34.135.103.183:3000`
 
 ## 📖 Usage
 
