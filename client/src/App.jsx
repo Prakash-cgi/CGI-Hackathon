@@ -1321,187 +1321,6 @@ export {
             );
           })()}
 
-          {/* Enhanced Individual Analysis Results with Detailed Metrics */}
-          {Object.entries(results).map(([type, data]) => {
-            const analysisType = analysisTypes.find(t => t.id === type);
-            const result = typeof data === 'string' ? data : data.result;
-            const score = typeof data === 'string' ? 50 : data.score;
-            const metrics = data.metrics || {
-              overallScore: score,
-              improvementPotential: 100 - score,
-              codeQuality: score,
-              modernizationLevel: score,
-              issuesFound: 0,
-              improvementsSuggested: 0,
-              hasCodeExamples: false,
-              hasSpecificRecommendations: false,
-              hasMetrics: false
-            };
-            
-            // Determine score color and label
-            const getScoreInfo = (score) => {
-              if (score >= 80) return { color: '#4CAF50', label: 'Excellent', emoji: '🟢' };
-              if (score >= 60) return { color: '#8BC34A', label: 'Good', emoji: '🟡' };
-              if (score >= 40) return { color: '#FF9800', label: 'Needs Work', emoji: '🟠' };
-              return { color: '#F44336', label: 'Poor', emoji: '🔴' };
-            };
-            
-            const scoreInfo = getScoreInfo(score);
-            
-            return (
-              <div key={type} className="result-section" style={{
-                background: 'white',
-                borderRadius: '15px',
-                padding: '25px',
-                marginBottom: '25px',
-                boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                border: `2px solid ${scoreInfo.color}20`
-              }}>
-                {/* Header with Icon and Score */}
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-                  <h3 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.4rem'}}>
-                    {analysisType && <analysisType.icon size={28} color={analysisType.color} />}
-                    {analysisType?.name || type}
-                  </h3>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '15px',
-                    padding: '12px 20px',
-                    borderRadius: '25px',
-                    background: `linear-gradient(135deg, ${scoreInfo.color}20 0%, ${scoreInfo.color}10 100%)`,
-                    border: `2px solid ${scoreInfo.color}40`
-                  }}>
-                    <span style={{fontSize: '1.5rem'}}>{scoreInfo.emoji}</span>
-                    <div style={{textAlign: 'center'}}>
-                      <div style={{fontSize: '2rem', fontWeight: 'bold', color: scoreInfo.color}}>
-                        {score}%
-                      </div>
-                      <div style={{fontSize: '0.9rem', color: scoreInfo.color, fontWeight: '600'}}>
-                        {scoreInfo.label}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div style={{
-                  width: '100%',
-                  height: '10px',
-                  backgroundColor: '#e0e0e0',
-                  borderRadius: '5px',
-                  overflow: 'hidden',
-                  marginBottom: '20px'
-                }}>
-                  <div style={{
-                    height: '100%',
-                    width: `${score}%`,
-                    background: `linear-gradient(90deg, ${scoreInfo.color}, ${scoreInfo.color}dd)`,
-                    borderRadius: '5px',
-                    transition: 'width 1s ease-in-out'
-                  }}></div>
-                </div>
-
-                {/* Detailed Metrics Grid */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '15px',
-                  marginBottom: '20px',
-                  padding: '15px',
-                  background: '#f8f9fa',
-                  borderRadius: '10px'
-                }}>
-                  <div style={{textAlign: 'center'}}>
-                    <div style={{fontSize: '1.2rem', fontWeight: 'bold', color: '#333'}}>
-                      {metrics.improvementPotential}%
-                    </div>
-                    <div style={{fontSize: '0.8rem', color: '#666'}}>Improvement Potential</div>
-                  </div>
-                  <div style={{textAlign: 'center'}}>
-                    <div style={{fontSize: '1.2rem', fontWeight: 'bold', color: '#333'}}>
-                      {metrics.issuesFound}
-                    </div>
-                    <div style={{fontSize: '0.8rem', color: '#666'}}>Issues Found</div>
-                  </div>
-                  <div style={{textAlign: 'center'}}>
-                    <div style={{fontSize: '1.2rem', fontWeight: 'bold', color: '#333'}}>
-                      {metrics.improvementsSuggested}
-                    </div>
-                    <div style={{fontSize: '0.8rem', color: '#666'}}>Improvements Suggested</div>
-                  </div>
-                  <div style={{textAlign: 'center'}}>
-                    <div style={{fontSize: '1.2rem', fontWeight: 'bold', color: '#333'}}>
-                      {metrics.modernizationLevel}%
-                    </div>
-                    <div style={{fontSize: '0.8rem', color: '#666'}}>Modernization Level</div>
-                  </div>
-                </div>
-
-                {/* Quality Indicators */}
-                <div style={{
-                  display: 'flex',
-                  gap: '10px',
-                  marginBottom: '20px',
-                  flexWrap: 'wrap'
-                }}>
-                  {data.isMockResponse && (
-                    <span style={{
-                      padding: '4px 12px',
-                      background: '#fff3e0',
-                      color: '#FF9800',
-                      borderRadius: '15px',
-                      fontSize: '0.8rem',
-                      fontWeight: '600'
-                    }}>🎭 Demo Mode</span>
-                  )}
-                  {metrics.hasCodeExamples && (
-                    <span style={{
-                      padding: '4px 12px',
-                      background: '#e8f5e8',
-                      color: '#4CAF50',
-                      borderRadius: '15px',
-                      fontSize: '0.8rem',
-                      fontWeight: '600'
-                    }}>✅ Code Examples</span>
-                  )}
-                  {metrics.hasSpecificRecommendations && (
-                    <span style={{
-                      padding: '4px 12px',
-                      background: '#e3f2fd',
-                      color: '#2196F3',
-                      borderRadius: '15px',
-                      fontSize: '0.8rem',
-                      fontWeight: '600'
-                    }}>💡 Recommendations</span>
-                  )}
-                  {metrics.hasMetrics && (
-                    <span style={{
-                      padding: '4px 12px',
-                      background: '#fff3e0',
-                      color: '#FF9800',
-                      borderRadius: '15px',
-                      fontSize: '0.8rem',
-                      fontWeight: '600'
-                    }}>📊 Metrics</span>
-                  )}
-                </div>
-
-                {/* Analysis Result */}
-                <div className="result-content" style={{
-                  background: '#f8f9fa',
-                  padding: '20px',
-                  borderRadius: '10px',
-                  border: '1px solid #e9ecef',
-                  fontSize: '0.95rem',
-                  lineHeight: '1.6'
-                }}>
-                  {result}
-                </div>
-              </div>
-            );
-          })}
-
           {/* Modernized Code Examples Section */}
           <div style={{
             background: 'white',
@@ -1884,6 +1703,188 @@ export {
               </div>
             </div>
           </div>
+
+          {/* Enhanced Individual Analysis Results with Detailed Metrics */}
+          {Object.entries(results).map(([type, data]) => {
+            const analysisType = analysisTypes.find(t => t.id === type);
+            const result = typeof data === 'string' ? data : data.result;
+            const score = typeof data === 'string' ? 50 : data.score;
+            const metrics = data.metrics || {
+              overallScore: score,
+              improvementPotential: 100 - score,
+              codeQuality: score,
+              modernizationLevel: score,
+              issuesFound: 0,
+              improvementsSuggested: 0,
+              hasCodeExamples: false,
+              hasSpecificRecommendations: false,
+              hasMetrics: false
+            };
+            
+            // Determine score color and label
+            const getScoreInfo = (score) => {
+              if (score >= 80) return { color: '#4CAF50', label: 'Excellent', emoji: '🟢' };
+              if (score >= 60) return { color: '#8BC34A', label: 'Good', emoji: '🟡' };
+              if (score >= 40) return { color: '#FF9800', label: 'Needs Work', emoji: '🟠' };
+              return { color: '#F44336', label: 'Poor', emoji: '🔴' };
+            };
+            
+            const scoreInfo = getScoreInfo(score);
+            
+            return (
+              <div key={type} className="result-section" style={{
+                background: 'white',
+                borderRadius: '15px',
+                padding: '25px',
+                marginBottom: '25px',
+                boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                border: `2px solid ${scoreInfo.color}20`
+              }}>
+                {/* Header with Icon and Score */}
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+                  <h3 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.4rem'}}>
+                    {analysisType && <analysisType.icon size={28} color={analysisType.color} />}
+                    {analysisType?.name || type}
+                  </h3>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '15px',
+                    padding: '12px 20px',
+                    borderRadius: '25px',
+                    background: `linear-gradient(135deg, ${scoreInfo.color}20 0%, ${scoreInfo.color}10 100%)`,
+                    border: `2px solid ${scoreInfo.color}40`
+                  }}>
+                    <span style={{fontSize: '1.5rem'}}>{scoreInfo.emoji}</span>
+                    <div style={{textAlign: 'center'}}>
+                      <div style={{fontSize: '2rem', fontWeight: 'bold', color: scoreInfo.color}}>
+                        {score}%
+                      </div>
+                      <div style={{fontSize: '0.9rem', color: scoreInfo.color, fontWeight: '600'}}>
+                        {scoreInfo.label}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div style={{
+                  width: '100%',
+                  height: '10px',
+                  backgroundColor: '#e0e0e0',
+                  borderRadius: '5px',
+                  overflow: 'hidden',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${score}%`,
+                    background: `linear-gradient(90deg, ${scoreInfo.color}, ${scoreInfo.color}dd)`,
+                    borderRadius: '5px',
+                    transition: 'width 1s ease-in-out'
+                  }}></div>
+                </div>
+
+                {/* Detailed Metrics Grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '15px',
+                  marginBottom: '20px',
+                  padding: '15px',
+                  background: '#f8f9fa',
+                  borderRadius: '10px'
+                }}>
+                  <div style={{textAlign: 'center'}}>
+                    <div style={{fontSize: '1.2rem', fontWeight: 'bold', color: '#333'}}>
+                      {metrics.improvementPotential}%
+                    </div>
+                    <div style={{fontSize: '0.8rem', color: '#666'}}>Improvement Potential</div>
+                  </div>
+                  <div style={{textAlign: 'center'}}>
+                    <div style={{fontSize: '1.2rem', fontWeight: 'bold', color: '#333'}}>
+                      {metrics.issuesFound}
+                    </div>
+                    <div style={{fontSize: '0.8rem', color: '#666'}}>Issues Found</div>
+                  </div>
+                  <div style={{textAlign: 'center'}}>
+                    <div style={{fontSize: '1.2rem', fontWeight: 'bold', color: '#333'}}>
+                      {metrics.improvementsSuggested}
+                    </div>
+                    <div style={{fontSize: '0.8rem', color: '#666'}}>Improvements Suggested</div>
+                  </div>
+                  <div style={{textAlign: 'center'}}>
+                    <div style={{fontSize: '1.2rem', fontWeight: 'bold', color: '#333'}}>
+                      {metrics.modernizationLevel}%
+                    </div>
+                    <div style={{fontSize: '0.8rem', color: '#666'}}>Modernization Level</div>
+                  </div>
+                </div>
+
+                {/* Quality Indicators */}
+                <div style={{
+                  display: 'flex',
+                  gap: '10px',
+                  marginBottom: '20px',
+                  flexWrap: 'wrap'
+                }}>
+                  {data.isMockResponse && (
+                    <span style={{
+                      padding: '4px 12px',
+                      background: '#fff3e0',
+                      color: '#FF9800',
+                      borderRadius: '15px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600'
+                    }}>🎭 Demo Mode</span>
+                  )}
+                  {metrics.hasCodeExamples && (
+                    <span style={{
+                      padding: '4px 12px',
+                      background: '#e8f5e8',
+                      color: '#4CAF50',
+                      borderRadius: '15px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600'
+                    }}>✅ Code Examples</span>
+                  )}
+                  {metrics.hasSpecificRecommendations && (
+                    <span style={{
+                      padding: '4px 12px',
+                      background: '#e3f2fd',
+                      color: '#2196F3',
+                      borderRadius: '15px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600'
+                    }}>💡 Recommendations</span>
+                  )}
+                  {metrics.hasMetrics && (
+                    <span style={{
+                      padding: '4px 12px',
+                      background: '#fff3e0',
+                      color: '#FF9800',
+                      borderRadius: '15px',
+                      fontSize: '0.8rem',
+                      fontWeight: '600'
+                    }}>📊 Metrics</span>
+                  )}
+                </div>
+
+                {/* Analysis Result */}
+                <div className="result-content" style={{
+                  background: '#f8f9fa',
+                  padding: '20px',
+                  borderRadius: '10px',
+                  border: '1px solid #e9ecef',
+                  fontSize: '0.95rem',
+                  lineHeight: '1.6'
+                }}>
+                  {result}
+                </div>
+              </div>
+            );
+          })}
+
 
           {/* Footer Section */}
           <div style={{
