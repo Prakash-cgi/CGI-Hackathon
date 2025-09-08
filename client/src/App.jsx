@@ -1046,6 +1046,41 @@ export {
             const totalIssues = allMetrics.reduce((sum, m) => sum + m.issuesFound, 0);
             const totalImprovements = allMetrics.reduce((sum, m) => sum + m.improvementsSuggested, 0);
             const avgModernizationLevel = Math.round(allMetrics.reduce((sum, m) => sum + m.modernizationLevel, 0) / allMetrics.length);
+            
+            // Calculate dynamic ROI based on analysis results
+            const calculateROI = () => {
+              const avgScore = Math.round(allMetrics.reduce((sum, m) => sum + m.overallScore, 0) / allMetrics.length);
+              const improvementPotential = Math.round(allMetrics.reduce((sum, m) => sum + m.improvementPotential, 0) / allMetrics.length);
+              
+              // Base ROI calculation based on code quality
+              let baseROI = Math.round((avgScore / 100) * 2000); // Scale to 0-2000%
+              let monthlySavings = Math.round((avgScore / 100) * 50000); // Scale to 0-50k
+              let devSpeedIncrease = Math.round((avgScore / 100) * 60); // Scale to 0-60%
+              let bugReduction = Math.round((improvementPotential / 100) * 80); // Scale to 0-80%
+              
+              // Adjust for modern vs legacy code
+              const isModernCode = avgScore > 70;
+              if (isModernCode) {
+                baseROI = Math.round(baseROI * 0.8); // Lower ROI for already modern code
+                monthlySavings = Math.round(monthlySavings * 0.7);
+                devSpeedIncrease = Math.round(devSpeedIncrease * 0.6);
+                bugReduction = Math.round(bugReduction * 0.5);
+              } else {
+                baseROI = Math.round(baseROI * 1.2); // Higher ROI for legacy code modernization
+                monthlySavings = Math.round(monthlySavings * 1.3);
+                devSpeedIncrease = Math.round(devSpeedIncrease * 1.4);
+                bugReduction = Math.round(bugReduction * 1.5);
+              }
+              
+              return {
+                totalROI: Math.max(200, baseROI), // Minimum 200%
+                monthlySavings: Math.max(5000, monthlySavings), // Minimum $5k
+                devSpeedIncrease: Math.max(10, devSpeedIncrease), // Minimum 10%
+                bugReduction: Math.min(90, Math.max(20, bugReduction)) // Between 20-90%
+              };
+            };
+            
+            const roiMetrics = calculateROI();
 
             return (
               <div style={{
@@ -1289,7 +1324,7 @@ export {
                       backdropFilter: 'blur(10px)'
                     }}>
                       <h4 style={{margin: '0 0 10px 0', fontSize: '1.2em'}}>Total ROI</h4>
-                      <div style={{fontSize: '2em', fontWeight: '700', margin: '10px 0'}}>1,500%</div>
+                      <div style={{fontSize: '2em', fontWeight: '700', margin: '10px 0'}}>{roiMetrics.totalROI.toLocaleString()}%</div>
                       <p style={{margin: '0', fontSize: '0.9rem', opacity: 0.9}}>First Year Return</p>
                     </div>
                     <div style={{
@@ -1299,7 +1334,7 @@ export {
                       backdropFilter: 'blur(10px)'
                     }}>
                       <h4 style={{margin: '0 0 10px 0', fontSize: '1.2em'}}>Monthly Savings</h4>
-                      <div style={{fontSize: '2em', fontWeight: '700', margin: '10px 0'}}>$28,000</div>
+                      <div style={{fontSize: '2em', fontWeight: '700', margin: '10px 0'}}>${roiMetrics.monthlySavings.toLocaleString()}</div>
                       <p style={{margin: '0', fontSize: '0.9rem', opacity: 0.9}}>Performance & Maintenance</p>
                     </div>
                     <div style={{
@@ -1309,7 +1344,7 @@ export {
                       backdropFilter: 'blur(10px)'
                     }}>
                       <h4 style={{margin: '0 0 10px 0', fontSize: '1.2em'}}>Development Speed</h4>
-                      <div style={{fontSize: '2em', fontWeight: '700', margin: '10px 0'}}>+40%</div>
+                      <div style={{fontSize: '2em', fontWeight: '700', margin: '10px 0'}}>+{roiMetrics.devSpeedIncrease}%</div>
                       <p style={{margin: '0', fontSize: '0.9rem', opacity: 0.9}}>Faster Feature Delivery</p>
                     </div>
                     <div style={{
@@ -1319,7 +1354,7 @@ export {
                       backdropFilter: 'blur(10px)'
                     }}>
                       <h4 style={{margin: '0 0 10px 0', fontSize: '1.2em'}}>Bug Reduction</h4>
-                      <div style={{fontSize: '2em', fontWeight: '700', margin: '10px 0'}}>-75%</div>
+                      <div style={{fontSize: '2em', fontWeight: '700', margin: '10px 0'}}>-{roiMetrics.bugReduction}%</div>
                       <p style={{margin: '0', fontSize: '0.9rem', opacity: 0.9}}>Fewer Production Issues</p>
                     </div>
                   </div>
