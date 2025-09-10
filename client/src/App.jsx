@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Code, FileText, Zap, Shield, GitBranch, BarChart3, Settings, FileCheck, Copy, Check } from 'lucide-react';
+import { Upload, Code, FileText, Zap, Shield, GitBranch, BarChart3, Settings, FileCheck } from 'lucide-react';
 import axios from 'axios';
 
 // Helper functions for modernized code examples
@@ -399,7 +399,6 @@ const getKeyAchievements = (type) => {
   ];
 };
 
-
 const analysisTypes = [
   { id: 'modernization', name: 'Code Modernization', icon: Zap, color: '#667eea' },
   { id: 'transformation', name: 'Code Transformation', icon: Code, color: '#764ba2' },
@@ -454,7 +453,8 @@ var user = {
   const [error, setError] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [apiKey, setApiKey] = useState('');
-  const [copied, setCopied] = useState(false);
+  // Use a default API key for demo purposes
+  const defaultApiKey = 'demo-key-for-hackathon';
 
   const handleFileUpload = (file) => {
     setSelectedFile(file);
@@ -494,12 +494,7 @@ var user = {
       return;
     }
 
-    // Validate API key
-    if (!apiKey || apiKey.trim() === '') {
-      setError('Please provide a valid Google Gemini API key. Get your free API key from Google AI Studio.');
-      return;
-    }
-
+    // Using default API key for demo purposes
 
     setIsAnalyzing(true);
     setError(null);
@@ -514,8 +509,8 @@ var user = {
         formData.append('code', code);
       }
       
-      // Add API key to the request
-      formData.append('apiKey', apiKey);
+      // Add API key to the request (use user input or demo key)
+      formData.append('apiKey', apiKey || defaultApiKey);
 
       let response;
       if (analysisType) {
@@ -531,24 +526,7 @@ var user = {
         setResults(response.data.results);
       }
     } catch (err) {
-      console.error('Analysis error:', err);
-      
-      // Handle specific error types
-      if (err.response?.data?.error === 'Invalid API Key') {
-        setError(`❌ **Invalid API Key**\n\n${err.response.data.details}\n\nGet your free API key from: ${err.response.data.helpUrl}`);
-      } else if (err.response?.data?.error) {
-        setError(`❌ **Error:** ${err.response.data.error}\n\n${err.response.data.details || 'Please try again.'}`);
-      } else if (err.response?.status === 400) {
-        setError('❌ **Bad Request**\n\nPlease check your input and try again.');
-      } else if (err.response?.status === 401) {
-        setError('❌ **Unauthorized**\n\nYour API key is invalid. Please check your Google Gemini API key.');
-      } else if (err.response?.status === 429) {
-        setError(`❌ **API Quota Exceeded**\n\n${err.response.data.details}\n\nGet your API key from: ${err.response.data.helpUrl}`);
-      } else if (err.response?.status >= 500) {
-        setError('❌ **Server Error**\n\nSomething went wrong on our end. Please try again later.');
-      } else {
-        setError('❌ **Analysis Failed**\n\nPlease check your API key and try again.');
-      }
+      setError(err.response?.data?.error || 'Analysis failed. Please try again.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -561,274 +539,14 @@ var user = {
     setError(null);
   };
 
-  const copyToClipboard = async () => {
-    const modernCode = `// Complete Modern JavaScript Implementation
-import { validateInput, sanitizeData } from './utils/validation.js';
-import { logger } from './utils/logger.js';
-import crypto from 'crypto';
-import { z } from 'zod';
-import { performance } from 'perf_hooks';
-
-// Input validation schemas
-const userSchema = z.object({
-  name: z.string().min(1).max(100).regex(/^[a-zA-Z\\s]+$/),
-  email: z.string().email(),
-  age: z.number().min(0).max(150)
-});
-
-const itemSchema = z.object({
-  price: z.number().positive(),
-  name: z.string().min(1).max(200)
-});
-
-// Memoization cache for performance optimization
-const memoCache = new Map();
-
-/**
- * High-performance total calculation with memoization and validation
- * @param {Array<{price: number}>} items - Array of items with price property
- * @returns {Promise<number>} Total price
- */
-const calculateTotal = async (items) => {
-  const startTime = performance.now();
-  
-  if (!Array.isArray(items)) {
-    throw new Error('Items must be an array');
-  }
-  
-  // Create cache key for memoization
-  const cacheKey = JSON.stringify(items.map(item => ({ price: item.price })));
-  
-  // Check cache first for performance
-  if (memoCache.has(cacheKey)) {
-    const endTime = performance.now();
-    logger.info(\`Cache hit! Calculation took \${endTime - startTime}ms\`);
-    return memoCache.get(cacheKey);
-  }
-  
-  // Use optimized reduce with validation
-  let total = 0;
-  for (let i = 0; i < items.length; i++) {
-    const validatedItem = itemSchema.parse(items[i]);
-    total += validatedItem.price;
-  }
-  
-  // Cache result for future use
-  memoCache.set(cacheKey, total);
-  
-  const endTime = performance.now();
-  logger.info(\`Calculation took \${endTime - startTime}ms\`);
-  
-  return total;
-};
-
-/**
- * Securely processes user data with validation, sanitization, and modern async/await
- * @param {Object} user - User object
- * @returns {Promise<Object>} Processed user data
- */
-const processUserData = async (user) => {
-  try {
-    if (!user) {
-      throw new Error('User data is required');
-    }
-    
-    // Validate input using Zod schema
-    const validatedUser = userSchema.parse(user);
-    
-    // Sanitize data
-    const sanitizedUser = {
-      name: validatedUser.name.trim(),
-      email: validatedUser.email.toLowerCase().trim(),
-      age: validatedUser.age,
-      id: crypto.randomUUID(), // Secure ID generation
-      createdAt: new Date().toISOString(),
-      processedAt: new Date().toISOString(),
-      status: 'active'
-    };
-    
-    logger.info('Processing user data', { userId: sanitizedUser.id });
-    
-    return sanitizedUser;
-  } catch (error) {
-    logger.error('Error processing user data', error);
-    throw new Error(\`Validation failed: \${error.message}\`);
-  }
-};
-
-/**
- * Optimized data fetching with connection pooling, timeout handling, and CSRF protection
- * @param {string} endpoint - API endpoint
- * @returns {Promise<Object>} Fetched data
- */
-const fetchData = async (endpoint) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
-  
-  try {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-    
-    const response = await fetch(endpoint, {
-      signal: controller.signal,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': csrfToken,
-        'X-Requested-With': 'XMLHttpRequest',
-        'Cache-Control': 'max-age=300'
-      },
-      credentials: 'same-origin'
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error('Request timeout');
-    }
-    logger.error('Error fetching data', error);
-    throw error;
-  }
-};
-
-/**
- * Batch processing for large datasets with parallel processing
- * @param {Array} users - Array of users
- * @returns {Promise<Array>} Processed users
- */
-const processUsersBatch = async (users) => {
-  const BATCH_SIZE = 100;
-  const results = [];
-  
-  for (let i = 0; i < users.length; i += BATCH_SIZE) {
-    const batch = users.slice(i, i + BATCH_SIZE);
-    
-    // Process batch in parallel using Promise.all
-    const batchResults = await Promise.all(
-      batch.map(async (user) => {
-        // Simulate async processing
-        await new Promise(resolve => setTimeout(resolve, 1));
-        return {
-          ...user,
-          processedAt: new Date().toISOString(),
-          id: crypto.randomUUID()
-        };
-      })
-    );
-    
-    results.push(...batchResults);
-  }
-  
-  return results;
-};
-
-// Modern class-based user object with proper encapsulation
-class User {
-  constructor(name, age, email) {
-    this._name = name;
-    this._age = age;
-    this._email = email;
-    this._createdAt = new Date();
-    this._id = crypto.randomUUID();
-  }
-  
-  get name() {
-    return this._name;
-  }
-  
-  set name(value) {
-    if (typeof value !== 'string' || value.trim().length === 0) {
-      throw new Error('Name must be a non-empty string');
-    }
-    this._name = value.trim();
-  }
-  
-  get age() {
-    return this._age;
-  }
-  
-  set age(value) {
-    if (typeof value !== 'number' || value < 0 || value > 150) {
-      throw new Error('Age must be a number between 0 and 150');
-    }
-    this._age = value;
-  }
-  
-  get email() {
-    return this._email;
-  }
-  
-  set email(value) {
-    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
-    if (!emailRegex.test(value)) {
-      throw new Error('Invalid email format');
-    }
-    this._email = value.toLowerCase().trim();
-  }
-  
-  getInfo() {
-    return \`\${this._name} is \${this._age} years old\`;
-  }
-  
-  toJSON() {
-    return {
-      id: this._id,
-      name: this._name,
-      age: this._age,
-      email: this._email,
-      createdAt: this._createdAt.toISOString()
-    };
-  }
-  
-  static fromJSON(json) {
-    const user = new User(json.name, json.age, json.email);
-    user._id = json.id;
-    user._createdAt = new Date(json.createdAt);
-    return user;
-  }
-}
-
-// Export all modern functions and classes
-export { 
-  calculateTotal, 
-  processUserData, 
-  fetchData, 
-  processUsersBatch,
-  User,
-  userSchema,
-  itemSchema
-};`;
-
-    try {
-      await navigator.clipboard.writeText(modernCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = modernCode;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
 
   return (
     <div className="container">
       <div className="header">
-        <h1>🚀 Code Modernization Analyzer</h1>
+        <h1>🚀 CodePrism</h1>
         <p>AI-powered code analysis and modernization suggestions</p>
         <p style={{fontSize: '1rem', opacity: 0.8, marginTop: '10px'}}>
-          ✨ Sample code is pre-loaded below - add your Google Gemini API key and try "Analyze All" to see the magic!
+          ✨ Sample code is pre-loaded below - try "Analyze All" to see the magic!
         </p>
       </div>
 
@@ -836,23 +554,22 @@ export {
       <div className="card" style={{marginBottom: '20px'}}>
         <h2>🔑 API Configuration</h2>
         <div className="form-group">
-          <label>🔑 Google Gemini API Key <span style={{color: '#e53e3e', fontWeight: 'bold'}}>* Required</span></label>
+          <label>Gemini API Key (Optional - Demo mode available)</label>
           <input
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Enter your Google Gemini API key or use demo mode"
+            placeholder="Enter your Gemini API key for real-time analysis (or click 'Use Demo Mode' for testing)"
             style={{
               width: '100%',
               padding: '12px',
-              border: apiKey ? '2px solid #48bb78' : '2px solid #e53e3e',
+              border: '2px solid #e0e0e0',
               borderRadius: '8px',
               fontSize: '14px',
-              fontFamily: 'monospace',
-              backgroundColor: apiKey ? '#f0fff4' : '#fef5e7'
+              fontFamily: 'monospace'
             }}
           />
-          <div style={{display: 'flex', gap: '10px', marginTop: '10px', alignItems: 'center'}}>
+          <div style={{display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap'}}>
             <button
               type="button"
               onClick={() => setApiKey('demo-key-for-hackathon')}
@@ -862,10 +579,13 @@ export {
                 color: 'white',
                 border: 'none',
                 borderRadius: '6px',
+                fontSize: '0.9rem',
+                fontWeight: '600',
                 cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '600'
+                transition: 'background-color 0.2s'
               }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#5a6fd8'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#667eea'}
             >
               🎯 Use Demo Mode
             </button>
@@ -874,20 +594,23 @@ export {
               onClick={() => setApiKey('')}
               style={{
                 padding: '8px 16px',
-                backgroundColor: '#e53e3e',
-                color: 'white',
-                border: 'none',
+                backgroundColor: '#f5f5f5',
+                color: '#666',
+                border: '1px solid #ddd',
                 borderRadius: '6px',
+                fontSize: '0.9rem',
+                fontWeight: '600',
                 cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '600'
+                transition: 'background-color 0.2s'
               }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#e0e0e0'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#f5f5f5'}
             >
               🗑️ Clear
             </button>
           </div>
           <p style={{fontSize: '0.9rem', color: '#666', marginTop: '8px'}}>
-            <strong>Options:</strong> Use <strong>Demo Mode</strong> for testing without API limits, or get your free API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{color: '#667eea', fontWeight: '600'}}>Google AI Studio</a> for real analysis.
+            Get your free API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{color: '#667eea', fontWeight: '600'}}>Google AI Studio</a> for real-time analysis, or use demo mode for testing.
           </p>
         </div>
       </div>
@@ -940,12 +663,8 @@ export {
         {/* Action Buttons */}
         <div className="btn-group">
           <button 
-            type="button"
             className="btn" 
-            onClick={(e) => {
-              e.preventDefault();
-              analyzeCode();
-            }}
+            onClick={() => analyzeCode()}
             disabled={isAnalyzing}
           >
             {isAnalyzing ? (
@@ -962,12 +681,8 @@ export {
           </button>
           
           <button 
-            type="button"
             className="btn btn-secondary" 
-            onClick={(e) => {
-              e.preventDefault();
-              clearAll();
-            }}
+            onClick={clearAll}
             disabled={isAnalyzing}
           >
             Clear All
@@ -983,12 +698,8 @@ export {
                 <Icon size={24} color={color} />
                 <h4>{name}</h4>
                 <button 
-                  type="button"
                   className="btn" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    analyzeCode(id);
-                  }}
+                  onClick={() => analyzeCode(id)}
                   disabled={isAnalyzing}
                   style={{ 
                     background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
@@ -1017,20 +728,22 @@ export {
         <div className="results">
           <h2>📊 Analysis Results</h2>
           
-          {/* Demo Mode Indicator */}
-          {results.demoMode && (
+          {/* Demo Mode Notice */}
+          {(apiKey === 'demo-key-for-hackathon' || Object.values(results).some(data => data.demoMode)) && (
             <div style={{
-              backgroundColor: '#e6f3ff',
+              background: 'linear-gradient(135deg, #e6f3ff 0%, #b3d9ff 100%)',
               border: '2px solid #667eea',
-              borderRadius: '8px',
-              padding: '12px',
-              marginBottom: '20px',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '25px',
               textAlign: 'center'
             }}>
-              <h3 style={{color: '#667eea', margin: '0 0 8px 0'}}>🎯 Demo Mode Active</h3>
-              <p style={{margin: '0', color: '#4a5568'}}>
+              <h3 style={{margin: '0 0 10px 0', color: '#667eea', fontSize: '1.2rem'}}>
+                🎯 Demo Mode Active
+              </h3>
+              <p style={{margin: '0', color: '#4a5568', fontSize: '0.95rem'}}>
                 This analysis uses mock data for demonstration purposes. 
-                Use a real Gemini API key for actual AI-powered analysis.
+                Get your free Gemini API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{color: '#667eea', fontWeight: '600'}}>Google AI Studio</a> for real-time analysis.
               </p>
             </div>
           )}
@@ -1488,388 +1201,6 @@ export {
             );
           })()}
 
-          {/* Modernized Code Examples Section */}
-          <div style={{
-            background: 'white',
-            borderRadius: '15px',
-            padding: '30px',
-            marginBottom: '30px',
-            boxShadow: '0 8px 25px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px'}}>
-              <h3 style={{margin: 0, color: '#333', fontSize: '1.8rem'}}>
-                🚀 Modernized code
-              </h3>
-              <button
-                onClick={copyToClipboard}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 20px',
-                  background: copied ? '#4CAF50' : '#667eea',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}
-                onMouseOver={(e) => {
-                  if (!copied) {
-                    e.target.style.background = '#5a6fd8';
-                    e.target.style.transform = 'translateY(-1px)';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (!copied) {
-                    e.target.style.background = '#667eea';
-                    e.target.style.transform = 'translateY(0)';
-                  }
-                }}
-              >
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                {copied ? 'Copied!' : 'Copy Code'}
-              </button>
-            </div>
-            <p style={{textAlign: 'center', color: '#666', marginBottom: '30px', fontSize: '1.1rem'}}>
-              All modern implementations combined in one comprehensive codebase
-            </p>
-            
-            {/* Single unified code block */}
-            <div style={{
-              border: '2px solid #667eea',
-              borderRadius: '12px',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #667eea 100%)',
-                color: 'white',
-                padding: '15px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}>
-                <h4 style={{margin: 0, fontSize: '1.2rem'}}>
-                  🎯 Modern JavaScript Implementation
-                </h4>
-                <button
-                  onClick={copyToClipboard}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '6px 12px',
-                    background: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseOver={(e) => {
-                    e.target.style.background = 'rgba(255,255,255,0.3)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.target.style.background = 'rgba(255,255,255,0.2)';
-                  }}
-                >
-                  {copied ? <Check size={14} /> : <Copy size={14} />}
-                  {copied ? 'Copied!' : 'Copy'}
-                </button>
-              </div>
-              
-              <div style={{
-                background: '#f8f9fa',
-                padding: '20px',
-                borderTop: '1px solid #e0e0e0'
-              }}>
-                <div style={{
-                  background: '#2d3748',
-                  color: '#e2e8f0',
-                  padding: '20px',
-                  borderRadius: '8px',
-                  fontFamily: 'Monaco, Consolas, "Courier New", monospace',
-                  fontSize: '14px',
-                  lineHeight: '1.6',
-                  overflow: 'auto',
-                  whiteSpace: 'pre-wrap',
-                  border: '1px solid #4a5568'
-                }}>
-{`// Complete Modern JavaScript Implementation
-import { validateInput, sanitizeData } from './utils/validation.js';
-import { logger } from './utils/logger.js';
-import crypto from 'crypto';
-import { z } from 'zod';
-import { performance } from 'perf_hooks';
-
-// Input validation schemas
-const userSchema = z.object({
-  name: z.string().min(1).max(100).regex(/^[a-zA-Z\\s]+$/),
-  email: z.string().email(),
-  age: z.number().min(0).max(150)
-});
-
-const itemSchema = z.object({
-  price: z.number().positive(),
-  name: z.string().min(1).max(200)
-});
-
-// Memoization cache for performance optimization
-const memoCache = new Map();
-
-/**
- * High-performance total calculation with memoization and validation
- * @param {Array<{price: number}>} items - Array of items with price property
- * @returns {Promise<number>} Total price
- */
-const calculateTotal = async (items) => {
-  const startTime = performance.now();
-  
-  if (!Array.isArray(items)) {
-    throw new Error('Items must be an array');
-  }
-  
-  // Create cache key for memoization
-  const cacheKey = JSON.stringify(items.map(item => ({ price: item.price })));
-  
-  // Check cache first for performance
-  if (memoCache.has(cacheKey)) {
-    const endTime = performance.now();
-    logger.info(\`Cache hit! Calculation took \${endTime - startTime}ms\`);
-    return memoCache.get(cacheKey);
-  }
-  
-  // Use optimized reduce with validation
-  let total = 0;
-  for (let i = 0; i < items.length; i++) {
-    const validatedItem = itemSchema.parse(items[i]);
-    total += validatedItem.price;
-  }
-  
-  // Cache result for future use
-  memoCache.set(cacheKey, total);
-  
-  const endTime = performance.now();
-  logger.info(\`Calculation took \${endTime - startTime}ms\`);
-  
-  return total;
-};
-
-/**
- * Securely processes user data with validation, sanitization, and modern async/await
- * @param {Object} user - User object
- * @returns {Promise<Object>} Processed user data
- */
-const processUserData = async (user) => {
-  try {
-    if (!user) {
-      throw new Error('User data is required');
-    }
-    
-    // Validate input using Zod schema
-    const validatedUser = userSchema.parse(user);
-    
-    // Sanitize data
-    const sanitizedUser = {
-      name: validatedUser.name.trim(),
-      email: validatedUser.email.toLowerCase().trim(),
-      age: validatedUser.age,
-      id: crypto.randomUUID(), // Secure ID generation
-      createdAt: new Date().toISOString(),
-      processedAt: new Date().toISOString(),
-      status: 'active'
-    };
-    
-    logger.info('Processing user data', { userId: sanitizedUser.id });
-    
-    return sanitizedUser;
-  } catch (error) {
-    logger.error('Error processing user data', error);
-    throw new Error(\`Validation failed: \${error.message}\`);
-  }
-};
-
-/**
- * Optimized data fetching with connection pooling, timeout handling, and CSRF protection
- * @param {string} endpoint - API endpoint
- * @returns {Promise<Object>} Fetched data
- */
-const fetchData = async (endpoint) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
-  
-  try {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-    
-    const response = await fetch(endpoint, {
-      signal: controller.signal,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': csrfToken,
-        'X-Requested-With': 'XMLHttpRequest',
-        'Cache-Control': 'max-age=300'
-      },
-      credentials: 'same-origin'
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error('Request timeout');
-    }
-    logger.error('Error fetching data', error);
-    throw error;
-  }
-};
-
-/**
- * Batch processing for large datasets with parallel processing
- * @param {Array} users - Array of users
- * @returns {Promise<Array>} Processed users
- */
-const processUsersBatch = async (users) => {
-  const BATCH_SIZE = 100;
-  const results = [];
-  
-  for (let i = 0; i < users.length; i += BATCH_SIZE) {
-    const batch = users.slice(i, i + BATCH_SIZE);
-    
-    // Process batch in parallel using Promise.all
-    const batchResults = await Promise.all(
-      batch.map(async (user) => {
-        // Simulate async processing
-        await new Promise(resolve => setTimeout(resolve, 1));
-        return {
-          ...user,
-          processedAt: new Date().toISOString(),
-          id: crypto.randomUUID()
-        };
-      })
-    );
-    
-    results.push(...batchResults);
-  }
-  
-  return results;
-};
-
-// Modern class-based user object with proper encapsulation
-class User {
-  constructor(name, age, email) {
-    this._name = name;
-    this._age = age;
-    this._email = email;
-    this._createdAt = new Date();
-    this._id = crypto.randomUUID();
-  }
-  
-  get name() {
-    return this._name;
-  }
-  
-  set name(value) {
-    if (typeof value !== 'string' || value.trim().length === 0) {
-      throw new Error('Name must be a non-empty string');
-    }
-    this._name = value.trim();
-  }
-  
-  get age() {
-    return this._age;
-  }
-  
-  set age(value) {
-    if (typeof value !== 'number' || value < 0 || value > 150) {
-      throw new Error('Age must be a number between 0 and 150');
-    }
-    this._age = value;
-  }
-  
-  get email() {
-    return this._email;
-  }
-  
-  set email(value) {
-    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
-    if (!emailRegex.test(value)) {
-      throw new Error('Invalid email format');
-    }
-    this._email = value.toLowerCase().trim();
-  }
-  
-  getInfo() {
-    return \`\${this._name} is \${this._age} years old\`;
-  }
-  
-  toJSON() {
-    return {
-      id: this._id,
-      name: this._name,
-      age: this._age,
-      email: this._email,
-      createdAt: this._createdAt.toISOString()
-    };
-  }
-  
-  static fromJSON(json) {
-    const user = new User(json.name, json.age, json.email);
-    user._id = json.id;
-    user._createdAt = new Date(json.createdAt);
-    return user;
-  }
-}
-
-// Export all modern functions and classes
-export { 
-  calculateTotal, 
-  processUserData, 
-  fetchData, 
-  processUsersBatch,
-  User,
-  userSchema,
-  itemSchema
-};`}
-                </div>
-                
-                <div style={{
-                  marginTop: '15px',
-                  padding: '15px',
-                  background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
-                  borderRadius: '8px',
-                  border: '1px solid #4CAF50'
-                }}>
-                  <h5 style={{margin: '0 0 10px 0', color: '#2e7d32', fontSize: '1rem'}}>
-                    ✨ Key Modernizations Applied:
-                  </h5>
-                  <ul style={{margin: 0, paddingLeft: '20px', color: '#2e7d32'}}>
-                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>ES6+ features: const/let, arrow functions, template literals, destructuring</li>
-                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Modern async/await pattern for better async handling</li>
-                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Input validation using Zod schemas for type safety</li>
-                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Data sanitization and secure ID generation with crypto.randomUUID()</li>
-                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>CSRF protection and secure headers for API calls</li>
-                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Performance optimization with memoization and caching</li>
-                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Batch processing with Promise.all for parallel execution</li>
-                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Modern class syntax with proper encapsulation and getters/setters</li>
-                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>Comprehensive error handling with try-catch blocks</li>
-                    <li style={{marginBottom: '5px', fontSize: '0.9rem'}}>JSDoc documentation for better code clarity and IDE support</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Enhanced Individual Analysis Results with Detailed Metrics */}
           {Object.entries(results).map(([type, data]) => {
