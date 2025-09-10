@@ -477,3 +477,4 @@ Code_Hack_Master_Presentation/
 - [ ] Compatible with presentation software
 
 **Ready to create your PowerPoint presentation! Use this structure to build a professional, engaging 3-minute presentation for Code Hack Master. 🚀**
+

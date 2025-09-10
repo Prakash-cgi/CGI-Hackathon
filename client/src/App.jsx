@@ -399,6 +399,7 @@ const getKeyAchievements = (type) => {
   ];
 };
 
+
 const analysisTypes = [
   { id: 'modernization', name: 'Code Modernization', icon: Zap, color: '#667eea' },
   { id: 'transformation', name: 'Code Transformation', icon: Code, color: '#764ba2' },
@@ -454,8 +455,6 @@ var user = {
   const [dragActive, setDragActive] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [copied, setCopied] = useState(false);
-  // Use a default API key for demo purposes
-  const defaultApiKey = 'demo-key-for-hackathon';
 
   const handleFileUpload = (file) => {
     setSelectedFile(file);
@@ -495,7 +494,12 @@ var user = {
       return;
     }
 
-    // Using default API key for demo purposes
+    // Validate API key
+    if (!apiKey || apiKey.trim() === '') {
+      setError('Please provide a valid Google Gemini API key. Get your free API key from Google AI Studio.');
+      return;
+    }
+
 
     setIsAnalyzing(true);
     setError(null);
@@ -510,8 +514,8 @@ var user = {
         formData.append('code', code);
       }
       
-      // Add API key to the request (use user input or default)
-      formData.append('apiKey', apiKey || defaultApiKey);
+      // Add API key to the request
+      formData.append('apiKey', apiKey);
 
       let response;
       if (analysisType) {
@@ -527,7 +531,24 @@ var user = {
         setResults(response.data.results);
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Analysis failed. Please try again.');
+      console.error('Analysis error:', err);
+      
+      // Handle specific error types
+      if (err.response?.data?.error === 'Invalid API Key') {
+        setError(`❌ **Invalid API Key**\n\n${err.response.data.details}\n\nGet your free API key from: ${err.response.data.helpUrl}`);
+      } else if (err.response?.data?.error) {
+        setError(`❌ **Error:** ${err.response.data.error}\n\n${err.response.data.details || 'Please try again.'}`);
+      } else if (err.response?.status === 400) {
+        setError('❌ **Bad Request**\n\nPlease check your input and try again.');
+      } else if (err.response?.status === 401) {
+        setError('❌ **Unauthorized**\n\nYour API key is invalid. Please check your Google Gemini API key.');
+      } else if (err.response?.status === 429) {
+        setError(`❌ **API Quota Exceeded**\n\n${err.response.data.details}\n\nGet your API key from: ${err.response.data.helpUrl}`);
+      } else if (err.response?.status >= 500) {
+        setError('❌ **Server Error**\n\nSomething went wrong on our end. Please try again later.');
+      } else {
+        setError('❌ **Analysis Failed**\n\nPlease check your API key and try again.');
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -807,7 +828,7 @@ export {
         <h1>🚀 Code Modernization Analyzer</h1>
         <p>AI-powered code analysis and modernization suggestions</p>
         <p style={{fontSize: '1rem', opacity: 0.8, marginTop: '10px'}}>
-          ✨ Sample code is pre-loaded below - try "Analyze All" to see the magic!
+          ✨ Sample code is pre-loaded below - add your Google Gemini API key and try "Analyze All" to see the magic!
         </p>
       </div>
 
@@ -815,23 +836,58 @@ export {
       <div className="card" style={{marginBottom: '20px'}}>
         <h2>🔑 API Configuration</h2>
         <div className="form-group">
-          <label>Gemini API Key (Optional - Demo mode available)</label>
+          <label>🔑 Google Gemini API Key <span style={{color: '#e53e3e', fontWeight: 'bold'}}>* Required</span></label>
           <input
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Enter your Gemini API key for real-time analysis (or leave empty for demo mode)"
+            placeholder="Enter your Google Gemini API key or use demo mode"
             style={{
               width: '100%',
               padding: '12px',
-              border: '2px solid #e0e0e0',
+              border: apiKey ? '2px solid #48bb78' : '2px solid #e53e3e',
               borderRadius: '8px',
               fontSize: '14px',
-              fontFamily: 'monospace'
+              fontFamily: 'monospace',
+              backgroundColor: apiKey ? '#f0fff4' : '#fef5e7'
             }}
           />
+          <div style={{display: 'flex', gap: '10px', marginTop: '10px', alignItems: 'center'}}>
+            <button
+              type="button"
+              onClick={() => setApiKey('demo-key-for-hackathon')}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '600'
+              }}
+            >
+              🎯 Use Demo Mode
+            </button>
+            <button
+              type="button"
+              onClick={() => setApiKey('')}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#e53e3e',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '600'
+              }}
+            >
+              🗑️ Clear
+            </button>
+          </div>
           <p style={{fontSize: '0.9rem', color: '#666', marginTop: '8px'}}>
-            Get your free API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{color: '#667eea', fontWeight: '600'}}>Google AI Studio</a> for real-time analysis, or use demo mode for testing.
+            <strong>Options:</strong> Use <strong>Demo Mode</strong> for testing without API limits, or get your free API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{color: '#667eea', fontWeight: '600'}}>Google AI Studio</a> for real analysis.
           </p>
         </div>
       </div>
@@ -884,8 +940,12 @@ export {
         {/* Action Buttons */}
         <div className="btn-group">
           <button 
+            type="button"
             className="btn" 
-            onClick={() => analyzeCode()}
+            onClick={(e) => {
+              e.preventDefault();
+              analyzeCode();
+            }}
             disabled={isAnalyzing}
           >
             {isAnalyzing ? (
@@ -902,8 +962,12 @@ export {
           </button>
           
           <button 
+            type="button"
             className="btn btn-secondary" 
-            onClick={clearAll}
+            onClick={(e) => {
+              e.preventDefault();
+              clearAll();
+            }}
             disabled={isAnalyzing}
           >
             Clear All
@@ -919,8 +983,12 @@ export {
                 <Icon size={24} color={color} />
                 <h4>{name}</h4>
                 <button 
+                  type="button"
                   className="btn" 
-                  onClick={() => analyzeCode(id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    analyzeCode(id);
+                  }}
                   disabled={isAnalyzing}
                   style={{ 
                     background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
@@ -949,22 +1017,20 @@ export {
         <div className="results">
           <h2>📊 Analysis Results</h2>
           
-          {/* Demo Mode Notice */}
-          {Object.values(results).some(data => data.isMockResponse) && (
+          {/* Demo Mode Indicator */}
+          {results.demoMode && (
             <div style={{
-              background: 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)',
-              border: '2px solid #FF9800',
-              borderRadius: '12px',
-              padding: '20px',
-              marginBottom: '25px',
+              backgroundColor: '#e6f3ff',
+              border: '2px solid #667eea',
+              borderRadius: '8px',
+              padding: '12px',
+              marginBottom: '20px',
               textAlign: 'center'
             }}>
-              <h3 style={{margin: '0 0 10px 0', color: '#E65100', fontSize: '1.2rem'}}>
-                🎭 Demo Mode Active
-              </h3>
-              <p style={{margin: '0', color: '#BF360C', fontSize: '0.95rem'}}>
-                Some analyses are showing demo results due to API quota limits. 
-                Get your free Gemini API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style={{color: '#FF9800', fontWeight: '600'}}>Google AI Studio</a> for real-time analysis.
+              <h3 style={{color: '#667eea', margin: '0 0 8px 0'}}>🎯 Demo Mode Active</h3>
+              <p style={{margin: '0', color: '#4a5568'}}>
+                This analysis uses mock data for demonstration purposes. 
+                Use a real Gemini API key for actual AI-powered analysis.
               </p>
             </div>
           )}

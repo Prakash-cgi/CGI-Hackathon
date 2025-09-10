@@ -55,6 +55,7 @@ const detectModernCode = (code) => {
   return modernCount > legacyCount && modernCount >= 3;
 };
 
+
 // Enhanced function to calculate detailed improvement metrics
 const calculateDetailedMetrics = (analysisType, response, inputCode = '') => {
   const responseLower = response.toLowerCase();
@@ -598,6 +599,19 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'API key is required' });
     }
 
+    // Demo mode - use mock responses for demo key
+    if (apiKey === 'demo-key-for-hackathon') {
+      const mockResponse = getMockResponse(analysisType, codeContent);
+      const metrics = calculateDetailedMetrics(analysisType, mockResponse, codeContent);
+      
+      return res.json({
+        analysis: mockResponse,
+        score: metrics.overallScore,
+        metrics: metrics,
+        demoMode: true
+      });
+    }
+
     // If file is uploaded, read its content
     if (req.file) {
       const fs = require('fs');
@@ -615,7 +629,7 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
 
     // Initialize Gemini AI with the provided API key
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     const fullPrompt = `${prompt}\n\nCode to analyze:\n\`\`\`\n${codeContent}\n\`\`\``;
 
@@ -638,20 +652,22 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
   } catch (error) {
     console.error('Analysis error:', error);
     
+    // Check for specific API key errors
+    if (error.message.includes('API_KEY_INVALID') || error.message.includes('INVALID_API_KEY') || error.message.includes('401')) {
+      res.status(400).json({ 
+        error: 'Invalid API Key', 
+        details: 'Your Google Gemini API key is invalid or expired. Please check your API key at Google AI Studio and try again.',
+        helpUrl: 'https://makersuite.google.com/app/apikey'
+      });
+      return;
+    }
+    
     // Check if it's a quota exceeded error
-    if (error.message.includes('429') || error.message.includes('quota')) {
-      console.log(`Using mock response for ${analysisType} due to API quota exceeded`);
-      const mockResult = getMockResponse(analysisType, codeContent);
-      const mockMetrics = calculateDetailedMetrics(analysisType, mockResult, codeContent);
-      
-      res.json({
-        success: true,
-        analysisType,
-        result: mockResult,
-        score: mockMetrics.overallScore,
-        metrics: mockMetrics,
-        isMockResponse: true,
-        timestamp: new Date().toISOString()
+    if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('QUOTA_EXCEEDED')) {
+      res.status(429).json({ 
+        error: 'API Quota Exceeded', 
+        details: 'Your Google Gemini API quota has been exceeded. Please try again later or upgrade your API plan.',
+        helpUrl: 'https://makersuite.google.com/app/apikey'
       });
     } else {
       res.status(500).json({ 
@@ -672,6 +688,27 @@ app.post('/api/analyze-all', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'API key is required' });
     }
 
+    // Demo mode - use mock responses for demo key
+    if (apiKey === 'demo-key-for-hackathon') {
+      const results = {};
+      const analysisTypes = Object.keys(analysisPrompts);
+      
+      for (const type of analysisTypes) {
+        const mockResponse = getMockResponse(type, codeContent);
+        const metrics = calculateDetailedMetrics(type, mockResponse, codeContent);
+        results[type] = {
+          result: mockResponse,
+          score: metrics.overallScore,
+          metrics: metrics
+        };
+      }
+      
+      return res.json({
+        results: results,
+        demoMode: true
+      });
+    }
+
     // If file is uploaded, read its content
     if (req.file) {
       const fs = require('fs');
@@ -684,7 +721,7 @@ app.post('/api/analyze-all', upload.single('file'), async (req, res) => {
 
     // Initialize Gemini AI with the provided API key
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     const results = {};
 
     // Run all analyses in parallel
@@ -696,39 +733,71 @@ app.post('/api/analyze-all', upload.single('file'), async (req, res) => {
         const analysisResult = response.text();
         const metrics = calculateDetailedMetrics(type, analysisResult, codeContent);
         return { type, result: analysisResult, score: metrics.overallScore, metrics };
-      } catch (error) {
-        console.error(`Error in ${type} analysis:`, error);
-        
-        // Check if it's a quota exceeded error
-        if (error.message.includes('429') || error.message.includes('quota')) {
-          console.log(`Using mock response for ${type} due to API quota exceeded`);
-          const mockResult = getMockResponse(type, codeContent);
-          const mockMetrics = calculateDetailedMetrics(type, mockResult, codeContent);
-          return { 
-            type, 
-            result: mockResult, 
-            score: mockMetrics.overallScore, 
-            metrics: mockMetrics,
-            isMockResponse: true
-          };
-        }
-        
-        // For other errors, return error response
-        const errorMetrics = {
-          overallScore: 0,
-          improvementPotential: 100,
-          codeQuality: 0,
-          modernizationLevel: 0,
-          issuesFound: 1,
-          improvementsSuggested: 0,
-          hasCodeExamples: false,
-          hasSpecificRecommendations: false,
-          hasMetrics: false,
-          analysisType: type,
-          timestamp: new Date().toISOString()
-        };
-        return { type, result: `Error: ${error.message}`, score: 0, metrics: errorMetrics };
-      }
+  } catch (error) {
+    console.error(`Error in ${type} analysis:`, error);
+    
+    // Check for specific API key errors
+    if (error.message.includes('API_KEY_INVALID') || error.message.includes('INVALID_API_KEY') || error.message.includes('401')) {
+      const errorMetrics = {
+        overallScore: 0,
+        improvementPotential: 100,
+        codeQuality: 0,
+        modernizationLevel: 0,
+        issuesFound: 1,
+        improvementsSuggested: 0,
+        hasCodeExamples: false,
+        hasSpecificRecommendations: false,
+        hasMetrics: false,
+        analysisType: type,
+        timestamp: new Date().toISOString()
+      };
+      return { 
+        type, 
+        result: `❌ **Invalid API Key Error**\n\nYour Google Gemini API key is invalid or expired. Please:\n1. Check your API key at [Google AI Studio](https://makersuite.google.com/app/apikey)\n2. Generate a new API key if needed\n3. Make sure the key has proper permissions\n\n**Error Details:** ${error.message}`, 
+        score: 0, 
+        metrics: errorMetrics 
+      };
+    }
+    
+    // Check if it's a quota exceeded error
+    if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('QUOTA_EXCEEDED')) {
+      const errorMetrics = {
+        overallScore: 0,
+        improvementPotential: 100,
+        codeQuality: 0,
+        modernizationLevel: 0,
+        issuesFound: 1,
+        improvementsSuggested: 0,
+        hasCodeExamples: false,
+        hasSpecificRecommendations: false,
+        hasMetrics: false,
+        analysisType: type,
+        timestamp: new Date().toISOString()
+      };
+      return { 
+        type, 
+        result: `❌ **API Quota Exceeded**\n\nYour Google Gemini API quota has been exceeded. Please try again later or upgrade your API plan.\n\n**Error Details:** ${error.message}`, 
+        score: 0, 
+        metrics: errorMetrics 
+      };
+    }
+    
+    // For other errors, return error response
+    const errorMetrics = {
+      overallScore: 0,
+      improvementPotential: 100,
+      codeQuality: 0,
+      modernizationLevel: 0,
+      issuesFound: 1,
+      improvementsSuggested: 0,
+      hasCodeExamples: false,
+      hasSpecificRecommendations: false,
+      hasMetrics: false,
+      analysisType: type,
+      timestamp: new Date().toISOString()
+    };
+    return { type, result: `❌ **Analysis Error**\n\nAn error occurred during analysis: ${error.message}`, score: 0, metrics: errorMetrics };
+  }
     });
 
     const analysisResults = await Promise.all(analysisPromises);
